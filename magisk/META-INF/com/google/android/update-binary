@@ -1,0 +1,40 @@
+#!/sbin/sh
+
+#################
+# Initialization
+#################
+
+umask 022
+
+# echo before loading util_functions
+ui_print() { echo "$1"; }
+
+require_new_magisk() {
+  [ -f $1 ] || return true
+  MAGISK_VER_CODE=$(grep MAGISK_VER_CODE $1 2>/dev/null | cut -d= -f2)
+  [ $MAGISK_VER_CODE -ge 23000 ] || return true
+  return false
+}
+
+#########################
+# Load util_functions.sh
+#########################
+
+OUTFD=$2
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk /data/adb/magisk/util_functions.sh
+if require_new_magisk /data/adb/magisk/util_functions.sh; then
+  ui_print "*******************************"
+  ui_print " Please install Magisk v23+! "
+  ui_print "*******************************"
+  exit 1
+fi
+
+. /data/adb/magisk/util_functions.sh
+[ $MAGISK_VER_CODE -lt 23000 ] && exit 1
+
+install_module
+exit 0
