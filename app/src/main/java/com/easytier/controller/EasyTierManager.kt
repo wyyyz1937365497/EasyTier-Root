@@ -26,26 +26,26 @@ class EasyTierManager {
     data class PeerInfo(
         val hostname: String = "",
         val virtualIp: String = "",
-        val publicIp: String = "",
-        val latencies: Map<String, Long> = emptyMap(),
-        val conns: List<ConnInfo> = emptyList()
-    )
-
-    data class ConnInfo(
-        val connType: String = "",
-        val remoteAddr: String = "",
-        val latency: Long = 0,
-        val rxBytes: Long = 0,
-        val txBytes: Long = 0,
-        val lossRate: Double = 0.0
+        val cost: String = "",
+        val latencyMs: String = "",
+        val lossRate: String = "",
+        val rxBytes: String = "",
+        val txBytes: String = "",
+        val tunnelProto: String = "",
+        val natType: String = "",
+        val isP2p: Boolean = false,
+        val isRelay: Boolean = false,
+        val isLocal: Boolean = false,
+        val version: String = ""
     )
 
     data class RouteInfo(
-        val peerName: String = "",
-        val peerIpv4: String = "",
-        val nextHopName: String = "",
+        val hostname: String = "",
+        val ipv4: String = "",
+        val nextHopHostname: String = "",
         val nextHopIpv4: String = "",
-        val cost: Int = 0
+        val pathLatency: Double = 0.0,
+        val pathLen: Int = 0
     )
 
     data class Status(
@@ -68,30 +68,22 @@ class EasyTierManager {
     fun getStatus(): Status {
         val moduleInstalled = RootShell.isModuleInstalled()
         if (!moduleInstalled) {
-            return Status(
-                moduleInstalled = false,
-                error = "Magisk 模块未安装"
-            )
+            return Status(moduleInstalled = false, error = "Magisk 模块未安装")
         }
 
-        // 检查暂停状态
         val pausedResult = RootShell.exec("test -f ${RootShell.getConfigDir()}/paused && echo yes", 3000)
         val paused = pausedResult.output.contains("yes")
 
-        // 检查进程是否运行
         val pidResult = RootShell.exec("pgrep -f easytier-core | head -1", 3000)
         val running = pidResult.output.isNotBlank() && pidResult.output.any { it.isDigit() }
 
         if (!running) {
             return Status(
-                running = false,
-                paused = paused,
-                moduleInstalled = true,
+                running = false, paused = paused, moduleInstalled = true,
                 error = if (paused) "服务已暂停" else "服务未运行"
             )
         }
 
-        // 获取节点信息
         val nodeInfo = try {
             val raw = runCli("node", "info")
             parseNodeInfo(raw)
@@ -100,7 +92,6 @@ class EasyTierManager {
             NodeInfo(running = true)
         }
 
-        // 获取 Peer 列表
         val peers = try {
             val raw = runCli("peer", "list")
             parsePeers(raw)
@@ -109,7 +100,6 @@ class EasyTierManager {
             emptyList()
         }
 
-        // 获取路由列表
         val routes = try {
             val raw = runCli("route", "list")
             parseRoutes(raw)
@@ -119,12 +109,8 @@ class EasyTierManager {
         }
 
         return Status(
-            running = true,
-            paused = paused,
-            moduleInstalled = true,
-            nodeInfo = nodeInfo,
-            peers = peers,
-            routes = routes
+            running = true, paused = paused, moduleInstalled = true,
+            nodeInfo = nodeInfo, peers = peers, routes = routes
         )
     }
 
@@ -133,7 +119,7 @@ class EasyTierManager {
         val obj = JSONObject(json)
         return NodeInfo(
             hostname = obj.optString("hostname", ""),
-            virtualIp = obj.optString("virtual_ipv4", obj.optString("ipv4", "")),
+            virtualIp = obj.optString("ipv4_addr", ""),
             version = obj.optString("version", ""),
             running = true
         )
@@ -145,26 +131,21 @@ class EasyTierManager {
         val peers = mutableListOf<PeerInfo>()
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
-            val conns = mutableListOf<ConnInfo>()
-            val connsArr = obj.optJSONArray("conns")
-            if (connsArr != null) {
-                for (j in 0 until connsArr.length()) {
-                    val c = connsArr.getJSONObject(j)
-                    conns.add(ConnInfo(
-                        connType = c.optString("conn_id", c.optString("conn_type", "")),
-                        remoteAddr = c.optString("remote_addr", ""),
-                        latency = c.optLong("latency_ms", 0),
-                        rxBytes = c.optLong("rx_bytes", 0),
-                        txBytes = c.optLong("tx_bytes", 0),
-                        lossRate = c.optDouble("loss_rate", 0.0)
-                    ))
-                }
-            }
+            val cost = obj.optString("cost", "")
             peers.add(PeerInfo(
                 hostname = obj.optString("hostname", ""),
-                virtualIp = obj.optString("virtual_ipv4", obj.optString("ipv4", "")),
-                publicIp = obj.optString("public_ipv4", ""),
-                conns = conns
+                virtualIp = obj.optString("ipv4", obj.optString("cidr", "")),
+                cost = cost,
+                latencyMs = obj.optString("lat_ms", "-"),
+                lossRate = obj.optString("loss_rate", "-"),
+                rxBytes = obj.optString("rx_bytes", "-"),
+                txBytes = obj.optString("tx_bytes", "-"),
+                tunnelProto = obj.optString("tunnel_proto", ""),
+                natType = obj.optString("nat_type", ""),
+                isP2p = cost == "p2p",
+                isRelay = cost.startsWith("relay"),
+                isLocal = cost == "Local",
+                version = obj.optString("version", "")
             ))
         }
         return peers
@@ -177,62 +158,45 @@ class EasyTierManager {
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
             routes.add(RouteInfo(
-                peerName = obj.optString("peer_name", ""),
-                peerIpv4 = obj.optString("peer_ipv4", ""),
-                nextHopName = obj.optString("next_hop_name", ""),
+                hostname = obj.optString("hostname", ""),
+                ipv4 = obj.optString("ipv4", ""),
+                nextHopHostname = obj.optString("next_hop_hostname", ""),
                 nextHopIpv4 = obj.optString("next_hop_ipv4", ""),
-                cost = obj.optInt("cost", 0)
+                pathLatency = obj.optDouble("path_latency", 0.0),
+                pathLen = obj.optInt("path_len", 0)
             ))
         }
         return routes
     }
 
     fun pause(): Boolean {
-        val result = RootShell.exec("touch ${RootShell.getConfigDir()}/paused", 3000)
-        return result.success
+        return RootShell.exec("touch ${RootShell.getConfigDir()}/paused", 3000).success
     }
 
     fun resume(): Boolean {
-        val result = RootShell.exec("rm -f ${RootShell.getConfigDir()}/paused", 3000)
-        return result.success
+        return RootShell.exec("rm -f ${RootShell.getConfigDir()}/paused", 3000).success
     }
 
     fun restart(): Boolean {
-        val moduleDir = RootShell.getModuleDir()
-        val result = RootShell.exec(
-            "rm -f ${RootShell.getConfigDir()}/paused && " +
-            "pkill -f easytier-core; sleep 2",
-            8000
-        )
-        // 守护进程会自动重启
-        return result.success
+        return RootShell.exec(
+            "rm -f ${RootShell.getConfigDir()}/paused && pkill -f easytier-core; sleep 2", 8000
+        ).success
     }
 
     fun getConfig(): String {
-        val result = RootShell.exec("cat ${RootShell.getConfigDir()}/config.toml", 3000)
-        return if (result.success) result.output else ""
+        val r = RootShell.exec("cat ${RootShell.getConfigDir()}/config.toml", 3000)
+        return if (r.success) r.output else ""
     }
 
     fun saveConfig(content: String): Boolean {
-        // 写入临时文件再移动
         val tmpFile = "/data/local/tmp/et_config.toml"
         val cmd = "cat > $tmpFile << 'ETPROEOF'\n$content\nETPROEOF\n" +
                   "cp $tmpFile ${RootShell.getConfigDir()}/config.toml && rm $tmpFile"
-        val result = RootShell.exec(cmd, 5000)
-        return result.success
+        return RootShell.exec(cmd, 5000).success
     }
 
     fun getLogs(tailLines: Int = 100): String {
-        val result = RootShell.exec("tail -$tailLines ${RootShell.getConfigDir()}/logs/core.log 2>/dev/null", 3000)
-        return if (result.success) result.output else "无日志"
-    }
-
-    fun formatBytes(bytes: Long): String {
-        return when {
-            bytes >= 1_000_000_000 -> "%.2f GB".format(bytes / 1_000_000_000.0)
-            bytes >= 1_000_000 -> "%.2f MB".format(bytes / 1_000_000.0)
-            bytes >= 1_000 -> "%.2f KB".format(bytes / 1_000.0)
-            else -> "$bytes B"
-        }
+        val r = RootShell.exec("tail -$tailLines ${RootShell.getConfigDir()}/logs/core.log 2>/dev/null", 3000)
+        return if (r.success) r.output else "无日志"
     }
 }
