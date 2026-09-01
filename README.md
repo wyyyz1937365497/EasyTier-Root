@@ -1,6 +1,6 @@
 # EasyTier Pro
 
-> 基于 Magisk 的 EasyTier 系统级透明代理方案，不占用 Android VPN 服务
+> 适配 SukiSU Ultra、KernelSU 与 Magisk 的 EasyTier 系统级透明代理方案，不占用 Android VPN 服务
 
 ## 架构
 
@@ -42,7 +42,7 @@
 
 ## 组成部分
 
-### 1. Magisk 模块 (`magisk/`)
+### 1. Root 模块 (`magisk/`)
 - `bin/easytier-core` — EasyTier 核心二进制 (aarch64)
 - `bin/easytier-cli` — CLI 管理工具
 - `bin/easytier-web` — Web 控制台
@@ -69,21 +69,22 @@ chmod +x setup_android_env.sh && ./setup_android_env.sh
 ```
 APK 位于 `app/build/outputs/apk/debug/app-debug.apk`
 
-### 打包 Magisk 模块
+### 打包 Root 模块
 ```bash
 cd magisk
 chmod +x build.sh
-./build.sh
+./build.sh sukisu   # SukiSU Ultra / KernelSU
+./build.sh magisk   # Magisk
 ```
-ZIP 位于 `easytier-pro-magisk-v2.6.4.zip`
+SukiSU Ultra ZIP 位于 `easytier-pro-sukisu-v2.6.4.zip`。
 
 ## 安装
 
-1. 在 Magisk Manager 中刷入 `easytier-pro-magisk-v2.6.4.zip`
+1. 在 SukiSU Ultra Manager 中刷入 `easytier-pro-sukisu-v2.6.4.zip`
 2. 重启设备
-3. 安装 APK
+3. 安装 APK（已有相同版本时无需重装）
 4. 打开 App，编辑配置文件（填入网络名称、密钥、对端节点）
-5. 重启或点击"重启"按钮使配置生效
+5. 重启或点击“重启”按钮使配置生效
 
 ## 配置说明
 

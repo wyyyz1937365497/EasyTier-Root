@@ -1,7 +1,7 @@
-#!/data/adb/magisk/busybox sh
+#!/system/bin/sh
 #
 # EasyTier Pro - Action 按钮
-# 在 Magisk Manager 中点击模块的"操作"按钮时触发
+# 在 Root 管理器中点击模块的“操作”按钮时触发
 # 用于切换暂停/恢复
 #
 MODDIR=${0%/*}

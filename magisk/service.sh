@@ -1,4 +1,4 @@
-#!/data/adb/magisk/busybox sh
+#!/system/bin/sh
 MODDIR=${0%/*}
 CONFIG_DIR="/data/adb/easytier_pro"
 LOG_FILE="${CONFIG_DIR}/logs/service.log"
