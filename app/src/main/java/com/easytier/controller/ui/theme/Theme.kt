@@ -1,6 +1,5 @@
 package com.easytier.controller.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -11,22 +10,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Blue80,
-    secondary = BlueGrey80,
-    tertiary = Cyan80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Blue40,
-    secondary = BlueGrey40,
-    tertiary = Cyan40
-)
+private val DarkColorScheme = darkColorScheme()
+private val LightColorScheme = lightColorScheme()
 
 @Composable
 fun EasyTierProTheme(
-    darkTheme: Boolean = true,
-    dynamicColor: Boolean = false,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -40,7 +30,7 @@ fun EasyTierProTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = AppTypography,
         content = content
     )
 }

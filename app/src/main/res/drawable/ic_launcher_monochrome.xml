@@ -7,17 +7,11 @@
     <path
         android:fillColor="#00000000"
         android:pathData="M54,35L54,49M49,57L36,70M59,57L72,70M41,76L67,76"
-        android:strokeColor="#D7E3FF"
+        android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:strokeWidth="5" />
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,25a7,7 0,1 0,0 14a7,7 0,1 0,0 -14M34,68a7,7 0,1 0,0 14a7,7 0,1 0,0 -14M74,68a7,7 0,1 0,0 14a7,7 0,1 0,0 -14" />
-    <path
-        android:fillColor="#A8E4FF"
-        android:pathData="M54,46a11,11 0,1 0,0 22a11,11 0,1 0,0 -22" />
-    <path
-        android:fillColor="@color/easytier_launcher_background"
-        android:pathData="M54,52a5,5 0,1 0,0 10a5,5 0,1 0,0 -10" />
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,25a7,7 0,1 0,0 14a7,7 0,1 0,0 -14M34,68a7,7 0,1 0,0 14a7,7 0,1 0,0 -14M74,68a7,7 0,1 0,0 14a7,7 0,1 0,0 -14M54,46a11,11 0,1 0,0 22a11,11 0,1 0,0 -22" />
 </vector>
