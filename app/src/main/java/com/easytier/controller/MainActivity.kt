@@ -106,7 +106,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val GITHUB_PROFILE_URL = "https://github.com/wyyyz1937365497"
-private const val GITHUB_REPOSITORY_URL = "$GITHUB_PROFILE_URL/EasyTierPro"
+private const val GITHUB_REPOSITORY_URL = "$GITHUB_PROFILE_URL/EasyTier-Root"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
