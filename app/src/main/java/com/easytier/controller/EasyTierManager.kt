@@ -178,8 +178,9 @@ class EasyTierManager {
     }
 
     fun restart(): Boolean {
+        // [e]asytier-core 正则不匹配 su shell 自身命令行，避免 pkill -f 杀掉承载进程导致误报失败
         return RootShell.exec(
-            "rm -f ${RootShell.getConfigDir()}/paused && pkill -f easytier-core; sleep 2", 8000
+            "rm -f ${RootShell.getConfigDir()}/paused; pkill -f '[e]asytier-core'; sleep 2; true", 8000
         ).success
     }
 
