@@ -40,7 +40,7 @@ is_running() {
         PID=$(cat "${PID_FILE}" 2>/dev/null)
         [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null && return 0
     fi
-    pgrep -f "${ET_CORE}" >/dev/null 2>&1 && return 0
+    pgrep -x easytier-core >/dev/null 2>&1 && return 0
     return 1
 }
 
@@ -100,7 +100,7 @@ stop_core() {
         PID=$(cat "${PID_FILE}" 2>/dev/null)
         [ -n "$PID" ] && kill "$PID" 2>/dev/null
     fi
-    pkill -f "${ET_CORE}" 2>/dev/null
+    pkill -x easytier-core 2>/dev/null
     sleep 1
     rm -f "${PID_FILE}"
     update_status "已停止"

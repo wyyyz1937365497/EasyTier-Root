@@ -74,7 +74,7 @@ class EasyTierManager {
         val pausedResult = RootShell.exec("test -f ${RootShell.getConfigDir()}/paused && echo yes", 3000)
         val paused = pausedResult.output.contains("yes")
 
-        val pidResult = RootShell.exec("pgrep -f easytier-core | head -1", 3000)
+        val pidResult = RootShell.exec("pgrep -x easytier-core | head -1", 3000)
         val running = pidResult.output.isNotBlank() && pidResult.output.any { it.isDigit() }
 
         if (!running) {
@@ -178,9 +178,9 @@ class EasyTierManager {
     }
 
     fun restart(): Boolean {
-        // [e]asytier-core 正则不匹配 su shell 自身命令行，避免 pkill -f 杀掉承载进程导致误报失败
+        // pkill -x 按进程名精确匹配，不会命中 su shell 自身命令行（-f 会自匹配导致误杀误报）
         return RootShell.exec(
-            "rm -f ${RootShell.getConfigDir()}/paused; pkill -f '[e]asytier-core'; sleep 2; true", 8000
+            "rm -f ${RootShell.getConfigDir()}/paused; pkill -x easytier-core; sleep 2; true", 8000
         ).success
     }
 
