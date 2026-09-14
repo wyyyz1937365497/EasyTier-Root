@@ -178,9 +178,14 @@ class EasyTierManager {
     }
 
     fun restart(): Boolean {
-        // pkill -x 按进程名精确匹配，不会命中 su shell 自身命令行（-f 会自匹配导致误杀误报）
+        // pkill -x 按进程名精确匹配，不会命中 su shell 自身命令行（-f 会自匹配导致误杀误报）。
+        // 杀掉核心后守护脚本最长 10s 才轮询拉起，故轮询等待其回归再返回，避免刷新时误报"未运行"。
         return RootShell.exec(
-            "rm -f ${RootShell.getConfigDir()}/paused; pkill -x easytier-core; sleep 2; true", 8000
+            "rm -f ${RootShell.getConfigDir()}/paused; pkill -x easytier-core; " +
+                "i=0; while [ \$i -lt 15 ]; do sleep 1; " +
+                "pgrep -x easytier-core >/dev/null 2>&1 && break; i=\$((i+1)); done; " +
+                "pgrep -x easytier-core >/dev/null 2>&1",
+            25000
         ).success
     }
 
